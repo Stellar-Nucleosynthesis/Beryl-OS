@@ -1,60 +1,97 @@
 BERYL FILE SYSTEM
 
-How the file system functions:
-In Beryl, the abstraction for block I/O devices is files. A file is an ordered set of disk blocks, each 512 bytes-long. Every disk allocation done deals with 512-byte blocks.
-Every file is represented by an f-node, 512 bytes long, located somewhere on the disk. The structure of a typical f-node is:
+The first file system used in Beryl is bfs-0. It is described below.
 
-[file owner: 1 byte][file type: 1 byte][file permissions: 1 byte][file links: 1 byte][file size: 5 bytes][reserved for future use: 7 bytes][disk block list: 496 bytes]
+bfs-0 Overview
+bfs-0 is an f-node based journaling file system. The basic unit of data in bfs-0 is a block - a 512-byte long continuous unit of data. It is a 1-to-1 analog of on-disk blocks, so these 2 terms will be used interchangeably. Free space is managed with a bitmap. There are three types of files: ordinary files, directories and symbolic links. Ordinary files contain plain old data, directories contain lists of files, thus maintaining the file system's hierarchy, and symbolic links contain weak links to other files. Every file is represented by an f-node, which contains all of the file's metadata and links to blocks containing the content of the file. The file system manages a metadata journal to make crash recovery easier. All changes to file system are first committed to the journal, and, having been made, erased from it. 
 
->File owner: File owner's ID. File's owner has full control over the file and it's settings, e.g. file permissions.
->File type: Indicates file type, e.g. a directory. 
->File permissions: Only 4 bits are used. Bits 0x8, 0x4, 0x2: permissions for other users to read, write, execute the file respectively; bit 0x1 - if set, indicates that the file will execute with it's owner's privileges.
->File links: The number of files defined by this f-node. 
->File size: 40-bit value, which represents the actual file size in bytes.
->Reserved for future use: Requires no clarification. Also serves as a padding to 128 bytes.
->Disk block list: A list of disk blocks that contain the file's data. If file size is no more than 496 bytes, it's actual content is stored here instead of pointers. Otherwise, the following scheme is used: 
-The first 320 bytes are used to store 40 pointers to disk blocks with actual file data. The total of 20 KB can be stored here.
-The next 40 bytes are used to store 5 pointers to trees with depth 1 (i.e. 5 pointers to disk blocks which are filled with pointers to disk blocks with actual file data). The total of 160 KB can be stored here.
-The next 40 bytes are used to store 5 pointers to trees with depth 2. The total of 10 MB can be stored here.
-The next 40 bytes are used to store 5 pointers to trees with depth 3. The total of 640 MB can be stored here.
-The next 40 bytes are used to store 5 pointers to trees with depth 4. The total of 40 GB can be stored here.
-The last 16 bytes are used to store 2 pointers to trees with depth 5. The total of 1 TB can be stored here.
-Any unused pointers must be filled with null bytes.
-All in all, 62 pointers can be present in a typical f-node. Despite the fact that theoretically more than 1 TB can be stored in one file, the actual limit is strictly 1 TB, as file size field is only 5 bytes long.
 
-Two data structures, essential for the functioning of the file system are free block bitmap and f-node table. 
-    Free block bitmap is self-explanatory: it is a bitmap, which has a specific bit set, if it's corresponding disk block is currently in use. Because one bit is used for every 512 bytes, it is very efficient in terms of disk space: less than 0,025% of disk's capacity.
-    F-node table is a 3-layered tree containing pointers to all of the system's f-nodes. Beryl's file system can contain a bit less than 2^21 files, or around 2 million. Primary array, 1 KB long, contains pointers to other arrays, which contain pointers to other arrays, which actually contain pointers to f-nodes. Every array contains 127 entries, not 128, as first 8 bytes are used to store information about the number of free entries in tree section which this array starts.
-An example of an f-node table if arrays were 32 bytes wide, not 1 KB:
-Primary array (level 0):     [25][p0][null][null]
-                                  /
-Secondary array (level 1):       [7][p0][null][null]
-                                     /
-Secondary array (level 2):          [1][p0][null][p1]
+===The Structure Of The File system===
 
-Count value in the level 2 array is 1 because only 1 empty space is left. Count value in the level 1 array is 7, because p0 array has 1 empty space, and 2 other entries can contain 3 spaces each. Count value in the level 0 (primary) array is 25, as 7 free entries are present in p0 array, and each of the other (null) arrays can contain 9 entries.
+---The Structure Of The Partition---
+[Superblock][Journal][Bitmap][f-node base table][Free space]
+> The first block in a partition is always a superblock. It contains essential information about the file system itself and the sizes of other modules.
+> A journal is a circular buffer containing information about pending writes to the disk.
+> A bitmap is, well, a bitmap containing information about free space on the disk. If a bit is set, its corresponding block is in use.
+> An f-node base table is a table containing links to other tables which contain links to other tables which contain links to f-nodes. (i.e. It is the root of a tree-based f-node array)
+> Free space is where files and other metadata of a file system reside.
 
-Types of files:
-1) Ordinary files: Files, containing data used by users and programs.
-2) Directories: Lists of other files from users' perspective, in reality - files, containing information about f-nodes of other files. Directories form hierarchy of a file system.
-3) Symbolic links: Files, containing paths to other files.
-4) Binded files: different file defined by one f-node. From users' perspective - when they change one file, the other one also changes.
+---The Structure Of An f-node---
+Each file in bfs-0 is represented by an f-node. Every f-node takes up 512 bytes. The structure of a typical f-node is as follows:
 
-Ordinary files:
-Ordinary files require no clarification.
+[Size: 8 bytes][Creation time: 8 bytes][Change time: 8 bytes][Permissions & Type: 2 bytes][Links: 1 bytes][Reserved: 5 bytes][Block links: 480 bytes]
+> Size: The size of the file in bytes.
+> Creation time: The time of file creation since 01.01.1970 00:00:00 UTC in seconds
+> Change time: The time of last file content modification since 01.01.1970 00:00:00 UTC in seconds
+> Permissions & Type: This filed consists of two parts. The permissions part is a 1 to 1 Unix copy, containing rwx permissions, as well as setuid, setgid and sticky bits. The remaining 4 bits are used to indicate file type, of which only 2 lower bits are actually used (2 upper bits are free and should be set to 0). The codes: 0 - ordinary file, 1 - directory, 2 - symbolic link
+> Links: The number of hard links to this f-node.
+> Reserved: 5-byte long padding, reserved for future use.
+> Block links: This field contains either file content itself if its size is less than 481 byte, or links to other disk blocks (60 of them). These links are split into several groups:
+Type 0 links: 30 of them. Just links to disk blocks containing file data. Max contained data: 15 KB
+Type 1 links: 15 of them. Links to intermediate blocks, with 1 intermediate level. (i.e. Links to blocks filled with links to blocks containing file data.) Max contained data: 480 KB
+Type 2 links: 8 of them. Links to intermediate blocks, with 2 intermediate levels. Max contained data: 16 MB
+Type 3 links: 4 of them. Links to intermediate blocks, with 3 intermediate levels. Max contained data: 512 MB
+Type 4 links: 2 of them. Links to intermediate blocks, with 4 intermediate levels. Max contained data: 16 GB
+Type 5 links: 1 of them. A link to intermediate blocks, with 5 intermediate levels. Max contained data: 512 GB
+Thus, max size of a file in bfs-0 is a bit over 528,5 GB. All unused links must be set to zero.
 
-Directories:
-Every directory contains a list of following structures:
+---f-node Table---
+Information about the location of f-nodes on the disk is stored in an f-node table. The number of f-nodes is too big to store them all in one place, like in old Unix systems, so, firstly, they are located in different places on the disk, and the f-node table only contains links to their locations. Secondly, the f-node table itself is too big to be an ordinary linear array, so it is instead represented by a 3-level tree. The root of the tree is an f-node base table (it will be called just a base table from here on out). A base table is 4 KB long, and contains 256 entries. Each entry is 16 bytes long, and consists of two parts (each 8 bytes long): a link to an intermediate table and the number of free entries down the tree. Every (used) base table entry contains a link to a level 1 table, all entries of which contain links to level 2 tables. Level 1 tables are exactly the same as a base table, but level 2 tables are different in that their entries are only 8 bytes long, as the number-down-the-tree field is not needed, and they contain links to f-nodes. So, the max number of files in bfs-0 is 2^25, or 33 554 432. To sum up: level 0 table, also called an f-node base table, is static on the disk, is 4 KB long and contains 256 links to level 1 tables, which are located somewhere on the disk, are 4 KB long an contain 256 links to level 2 tables each. Level 2 tables are also 4 KB long, but contain 512 entries - links to f-nodes. Every f-node has a unique number associated with it, a.k.a the f-node ID, which is just its index in the f-node table.
 
-[file name: 35 bytes][file extension: 5 bytes][file ID: 4 bytes][reserved for future use: 4 bytes]
+---Bitmap---
+Free block bitmap is a bitmap representing the free space on the disk. As 1 bit is used for every block, it takes up 1/4096 size of the disk, or roughly 0,024%, which is acceptable.
 
->File name: The file name in written in printable ASCII characters, but can't contain '.' or '/' characters, as they are reserved for use in extensions and file paths respectively. Max file name length is 35 bytes; if it's size is less than 35 bytes, the rest must be filled with null bytes.
->File extension: The file extension characterizes the format of data in the file. The file extension in written in printable ASCII characters, but can't contain '.' or '/' characters. Max file extension length is 5 bytes; if it's size is less than 5 bytes, the rest must be filled with null bytes.
->File ID: Global unique identifier of the file. It corresponds to the file's number in f-node table. Max value of this field is 2^20, not 2^32.
->Reserved for future use: Requires no clarification. Also serves as a padding to 48 bytes.
+---Files And Paths---
+There are three types of files in bfs-0:
+1) Ordinary files. Files, containing data.
+2) Directories. From the view of the user, directories act like folders with files, but from the viewpoint of the system - they are just plain old files with some info written. It is impossible to directly read or write a directory, its content is managed exclusively by the system. Every directory contains some number of the following entries:
+[Entry length: 4 bytes][Name length: 4 bytes][File name: arbitrary][File extension: arbitrary][f-node ID: 4 bytes]
+> Entry length: The length of the whole entry
+> Name length: The length of the file name
+> File name: An array of ASCII-printable characters, which defines the file name. The string can't contain '/' and '.' characters. The length is arbitrary.
+> File extension: An array of ASCII-printable characters, which defines the file extension. The string can't contain '/' character. The length is arbitrary.
+> f-node ID: The ID of the f-node which corresponds to this file.
+Files with the same name and extension can't exist within the same directory. 
+Every directory contains two entries: "." and "..", which correspond to the current directory and it's parent directory. The file system's "top" directory is root: naturally, it doesn't have a parent directory, so its ".." entry refers to itself. In a completely empty file system, the only directory would be root with two entries: "." and "..".
+3) Symbolic links. A symbolic link just contains a path to an ordinary file. When a symbolic link is oppened, its corresponding file is oppened instead. As with directories, the content of a symbolic link is managed by the system and can't be directly read or written.
 
-Symbolic links:
-Simply files, containing a path to another file. When a symbolic link is opened, the file it is pointing to is opened instead.
+A file is essentially an entity, which consists of the file's name, extension, and its f-node. There is a way to associate more than one file with an f-node: hard links are used. When a new file is linked to an f-node (a hard link is created), its "links" field is increased by one, and decreased, if a file is unlinked. When the number of links reaches zero, the f-node and its content is deleted.
 
-Binded files:
-Different files defined by one f-node. If one file is deleted, the other ones don't change. If one file is changed, the other ones also change. Binded files can have different names or even extensions.
+Directories form a complex hierarchy, so to uniquely indentify files within the system, file paths are used. File path is formed by the names of directories which needed to be passed to reach a certain file and the file's name. Names are separated with '/' symbol. If a path starts with a '/' symbol, it means that its starting point is the root directory. For example, "/foo/bar.txt" is the path of a "bar.txt" file, located in "foo" directory, which is located in root directory. If a path starts with another symbol, the search starts in the current directory.
+
+===Journal===
+
+---Journal Structure---
+A journal is a core mechanism of bfs-0's protection against crashes. Before each change is made to the file system, the transaction is first committed to the journal. The journal has the following structure:
+[Journal superblock][Transaction buffer]
+> Journal superblock: A disk block which contains all of the necessary information about the journal.
+> Transaction buffer: The circular buffer which actually contains commited transactions.
+
+Journal superblock has the following structure:
+[Buffer size: 8 bytes][Log start: 8 bytes][Log end: 8 bytes][Reserved: 488 bytes]
+> Buffer size: The size of the commit buffer in bytes.
+> Log start: The offset of the beginning of the log from the start of the buffer.
+> Log end: The offset of the ending of the log (not inclusive, i.e. it is the number of the first byte outside of the log).
+> Reserved: As the size of the superblock must be exactly 512 bytes, but not so much information must be kept there, most of it's space is empty.
+
+Trnsaction buffer is a circular buffer that contains the commited transactions. The transactions are organised in a log: new commits are added to the end of the log, transactions in the beginning of the log are cleared first. Each transaction in the log looks like this:
+[TxB: 1 block][Data Blocks: arbitrary][TxE: 1 block]
+> TxB: Transaction beginning. Contains information about the number of commited data blocks, their on-disk locations, and a checksum.
+> Data Blocks: Copies of blocks, that need to be written to the disk.
+> TxE: Transaction end. Contains the copied information from TxB.
+
+---TxB And TxE Structure---
+TxB and TxE have the following structure:
+[Magic number: 4 bytes][Number of blocks: 4 bytes][Checksum: 8 bytes][Block addresses: 496 bytes]
+> Magic number: 0x3E3E3E3E in TxB and 0x21212121 in TxE.
+> Number of blocks: The number of block copies in this transaction.
+> Checksum: Calcucated digest (a.k.a hash) of the commited data blocks (everything between TxB and TxE). It is needed to enable transaction writing in one sweep, with guaranteed message integrity.
+> Block addresses: The addresses of blocks that have been commited. Unused space must be zeroed. Thus, one transaction can contain the max of 62 blocks.
+
+---Journaling Principles---
+When the system decides to write to disk, the following must be done:
+1) The data of ordinary files and symbolic links is written to disk. It doesn't have to be commited.
+2) Transaction is formed in memory. Only metadata of the file system and content of directories is commited. TxB and TxE are filled, checksum is calculated.
+3) Transaction is written to the end of the log. Log end pointer in the journal superblock is updated. This step must be completed before the next one begins.
+4) Transaction is checkpointed: the blocks are written to their locations on the disk. This step must be completed before the next one begins.
+5) Transaction is deleted: Log start pointer in the journal superblock is updated.
