@@ -95,3 +95,10 @@ When the system decides to write to disk, the following must be done:
 3) Transaction is written to the end of the log. Log end pointer in the journal superblock is updated. This step must be completed before the next one begins.
 4) Transaction is checkpointed: the blocks are written to their locations on the disk. This step must be completed before the next one begins.
 5) Transaction is deleted: Log start pointer in the journal superblock is updated.
+
+===Superblock===
+A superblock is the block in the beginning af a disk partitioning containing crucial information about the file system.
+
+
+
+
