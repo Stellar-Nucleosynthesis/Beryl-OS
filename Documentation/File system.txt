@@ -28,7 +28,7 @@ Each file in bfs-0 is represented by an f-node. Every f-node takes up 512 bytes.
 > Permissions & Type: This filed consists of two parts. The permissions part is a 1 to 1 Unix copy, containing rwx permissions, as well as setuid, setgid and sticky bits. The remaining 4 bits are used to indicate file type, of which only 2 lower bits are actually used (2 upper bits are free and should be set to 0). The codes: 0 - ordinary file, 1 - directory, 2 - symbolic link
 > Links: The number of hard links to this f-node.
 > Reserved: 1-byte long padding, reserved for future use.
-> Block links: This field contains either file content itself if its size is less than 497 bytes, or links to other disk blocks (124 of them). These links are split into several groups:
+> Block links: This field contains links to disk blocks with file data (124 of them). These links are split into several groups:
 Type 0 links: 64 of them. Just links to disk blocks containing file data. Max contained data: 32 KB
 Type 1 links: 40 of them. Links to intermediate blocks, with 1 intermediate level. (i.e. Links to blocks filled with links to blocks containing file data.) Max contained data: 2.5 MB
 Type 2 links: 16 of them. Links to intermediate blocks, with 2 intermediate levels. Max contained data: 128 MB
