@@ -3,7 +3,9 @@ BERYL FILE SYSTEM
 The first file system used in Beryl is bfs-0. It is described below.
 
 bfs-0 Overview
-bfs-0 is an f-node based journaling file system. The basic unit of data in bfs-0 is a block - a 512-byte long continuous unit of data. It is a 1-to-1 analog of on-disk blocks, so these 2 terms will be used interchangeably. Free space is managed with a bitmap. There are three types of files: ordinary files, directories and symbolic links. Ordinary files contain plain old data, directories contain lists of files, thus maintaining the file system's hierarchy, and symbolic links contain weak links to other files. Every file is represented by an f-node, which contains all of the file's metadata and links to blocks containing the content of the file. The file system manages a metadata journal to make crash recovery easier. All changes to file system are first committed to the journal, and, having been made, erased from it. 
+bfs-0 is an f-node based journaling file system. The basic unit of data in bfs-0 is a block - a 512-byte long continuous unit of data. It is a 1-to-1 analog of on-disk blocks, so these 2 terms will be used interchangeably. Free space is managed with a bitmap. There are three types of files: ordinary files, directories and symbolic links. Ordinary files contain plain old data, directories contain lists of files, thus maintaining the file system's hierarchy, and symbolic links contain weak links to other files. Every file is represented by an f-node, which contains all of the file's metadata and links to blocks containing the content of the file. The file system manages a metadata journal to make crash recovery easier. All changes to file system are first committed to the journal, and, having been made, erased from it.
+bfs-0 is 32-bit based, so all operations are optimised for it.
+As block are minimal units of data dealt with, all disk addresses refer to the numbers of blocks. That means, disk address 2 refers not to the second byte, but to the second block.
 
 
 ===The Structure Of The File system===
@@ -19,24 +21,22 @@ bfs-0 is an f-node based journaling file system. The basic unit of data in bfs-0
 ---The Structure Of An f-node---
 Each file in bfs-0 is represented by an f-node. Every f-node takes up 512 bytes. The structure of a typical f-node is as follows:
 
-[Size: 8 bytes][Creation time: 8 bytes][Change time: 8 bytes][Permissions & Type: 2 bytes][Links: 1 bytes][Reserved: 5 bytes][Block links: 480 bytes]
-> Size: The size of the file in bytes.
+[Size: 4 bytes][Creation time: 4 bytes][Change time: 4 bytes][Permissions & Type: 2 bytes][Links: 1 byte][Reserved: 1 byte][Block links: 496 bytes]
+> Size: The size of the file in bytes. Thus, max size of a file in bfs-0 is 4 GB. 
 > Creation time: The time of file creation since 01.01.1970 00:00:00 UTC in seconds
 > Change time: The time of last file content modification since 01.01.1970 00:00:00 UTC in seconds
 > Permissions & Type: This filed consists of two parts. The permissions part is a 1 to 1 Unix copy, containing rwx permissions, as well as setuid, setgid and sticky bits. The remaining 4 bits are used to indicate file type, of which only 2 lower bits are actually used (2 upper bits are free and should be set to 0). The codes: 0 - ordinary file, 1 - directory, 2 - symbolic link
 > Links: The number of hard links to this f-node.
-> Reserved: 5-byte long padding, reserved for future use.
-> Block links: This field contains either file content itself if its size is less than 481 byte, or links to other disk blocks (60 of them). These links are split into several groups:
-Type 0 links: 30 of them. Just links to disk blocks containing file data. Max contained data: 15 KB
-Type 1 links: 15 of them. Links to intermediate blocks, with 1 intermediate level. (i.e. Links to blocks filled with links to blocks containing file data.) Max contained data: 480 KB
-Type 2 links: 8 of them. Links to intermediate blocks, with 2 intermediate levels. Max contained data: 16 MB
-Type 3 links: 4 of them. Links to intermediate blocks, with 3 intermediate levels. Max contained data: 512 MB
-Type 4 links: 2 of them. Links to intermediate blocks, with 4 intermediate levels. Max contained data: 16 GB
-Type 5 links: 1 of them. A link to intermediate blocks, with 5 intermediate levels. Max contained data: 512 GB
-Thus, max size of a file in bfs-0 is a bit over 528,5 GB. All unused links must be set to zero.
+> Reserved: 1-byte long padding, reserved for future use.
+> Block links: This field contains either file content itself if its size is less than 497 bytes, or links to other disk blocks (124 of them). These links are split into several groups:
+Type 0 links: 64 of them. Just links to disk blocks containing file data. Max contained data: 32 KB
+Type 1 links: 40 of them. Links to intermediate blocks, with 1 intermediate level. (i.e. Links to blocks filled with links to blocks containing file data.) Max contained data: 2.5 MB
+Type 2 links: 16 of them. Links to intermediate blocks, with 2 intermediate levels. Max contained data: 128 MB
+Type 3 links: 4 of them. Links to intermediate blocks, with 3 intermediate levels. Max contained data: 4 GB
+Thus, the theoretical max size of a file in bfs-0 is a bit over 4.1 GB, but the real max size is strictly 4GB due to the size field limitation. All unused links must be set to zero.
 
 ---f-node Table---
-Information about the location of f-nodes on the disk is stored in an f-node table. The number of f-nodes is too big to store them all in one place, like in old Unix systems, so, firstly, they are located in different places on the disk, and the f-node table only contains links to their locations. Secondly, the f-node table itself is too big to be an ordinary linear array, so it is instead represented by a 3-level tree. The root of the tree is an f-node base table (it will be called just a base table from here on out). A base table is 4 KB long, and contains 256 entries. Each entry is 16 bytes long, and consists of two parts (each 8 bytes long): a link to an intermediate table and the number of free entries down the tree. Every (used) base table entry contains a link to a level 1 table, all entries of which contain links to level 2 tables. Level 1 tables are exactly the same as a base table, but level 2 tables are different in that their entries are only 8 bytes long, as the number-down-the-tree field is not needed, and they contain links to f-nodes. So, the max number of files in bfs-0 is 2^25, or 33 554 432. To sum up: level 0 table, also called an f-node base table, is static on the disk, is 4 KB long and contains 256 links to level 1 tables, which are located somewhere on the disk, are 4 KB long an contain 256 links to level 2 tables each. Level 2 tables are also 4 KB long, but contain 512 entries - links to f-nodes. Every f-node has a unique number associated with it, a.k.a the f-node ID, which is just its index in the f-node table.
+Information about the location of f-nodes on the disk is stored in an f-node table. The number of f-nodes is too big to store them all in one place, like in old Unix systems, so, firstly, they are located in different places on the disk, and the f-node table only contains links to their locations. Secondly, the f-node table itself is too big to be an ordinary linear array, so it is instead represented by a 3-level tree. The root of the tree is an f-node base table (it will be called just a base table from here on out). A base table is 2 KB long, and contains 256 entries. Each entry is 8 bytes long, and consists of two parts (each 4 bytes long): a link to an intermediate table and the number of free entries down the tree. Every (used) base table entry contains a link to a level 1 table, all entries of which contain links to level 2 tables. Level 1 tables are exactly the same as a base table, but level 2 tables are different in that their entries are only 4 bytes long, as the number-down-the-tree field is not needed, and they contain links to f-nodes. So, the max number of files in bfs-0 is 2^25, or 33 554 432. To sum up: level 0 table, also called an f-node base table, is static on the disk, is 2 KB long and contains 256 links to level 1 tables, which are located somewhere on the disk, are 2 KB long an contain 256 links to level 2 tables each. Level 2 tables are also 2 KB long, but contain 512 entries - links to f-nodes. Every f-node has a unique number associated with it, a.k.a the f-node ID, which is just its index in the f-node table.
 
 ---Bitmap---
 Free block bitmap is a bitmap representing the free space on the disk. As 1 bit is used for every block, it takes up 1/4096 size of the disk, or roughly 0,024%, which is acceptable.
@@ -68,10 +68,10 @@ A journal is a core mechanism of bfs-0's protection against crashes. Before each
 > Transaction buffer: The circular buffer which actually contains commited transactions.
 
 Journal superblock has the following structure:
-[Buffer size: 8 bytes][Log start: 8 bytes][Log end: 8 bytes][Reserved: 488 bytes]
-> Buffer size: The size of the commit buffer in bytes.
-> Log start: The offset of the beginning of the log from the start of the buffer.
-> Log end: The offset of the ending of the log (not inclusive, i.e. it is the number of the first byte outside of the log).
+[Buffer size: 4 bytes][Log start: 4 bytes][Log end: 4 bytes][Reserved: 488 bytes]
+> Buffer size: The size of the commit buffer in blocks.
+> Log start: The offset of the beginning of the log from the start of the buffer in blocks.
+> Log end: The offset of the ending of the log  in blocks (not inclusive, i.e. it is the number of the first byte outside of the log).
 > Reserved: As the size of the superblock must be exactly 512 bytes, but not so much information must be kept there, most of it's space is empty.
 
 Trnsaction buffer is a circular buffer that contains the commited transactions. The transactions are organised in a log: new commits are added to the end of the log, transactions in the beginning of the log are cleared first. Each transaction in the log looks like this:
@@ -82,11 +82,11 @@ Trnsaction buffer is a circular buffer that contains the commited transactions. 
 
 ---TxB And TxE Structure---
 TxB and TxE have the following structure:
-[Magic number: 4 bytes][Number of blocks: 4 bytes][Checksum: 8 bytes][Block addresses: 496 bytes]
+[Magic number: 4 bytes][Number of blocks: 4 bytes][Checksum: 4 bytes][Block addresses: 500 bytes]
 > Magic number: 0x3E3E3E3E in TxB and 0x21212121 in TxE.
 > Number of blocks: The number of block copies in this transaction.
 > Checksum: Calcucated digest (a.k.a hash) of the commited data blocks (everything between TxB and TxE). It is needed to enable transaction writing in one sweep, with guaranteed message integrity.
-> Block addresses: The addresses of blocks that have been commited. Unused space must be zeroed. Thus, one transaction can contain the max of 62 blocks.
+> Block addresses: The addresses of blocks that have been commited. Unused space must be zeroed. Thus, one transaction can contain the max of 125 blocks.
 
 ---Journaling Principles---
 When the system decides to write to disk, the following must be done:
