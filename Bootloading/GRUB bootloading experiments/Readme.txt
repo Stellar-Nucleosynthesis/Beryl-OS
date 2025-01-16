@@ -1,4 +1,4 @@
-This folder is used to experiment with grub bootloader. kernel.asm is loaded as an OS. To construct an ISO:
+This folder is used to experiment with grub bootloader. kernel.asm is loaded as an OS. Linux programs were used for this. To construct an ISO:
 1) Source file kernel.asm must be modified
 2) kernel.asm is compiled with nasm: >nasm -f elf32 kernel.asm
 3) kernel.o is linked, in this case - with ld: >ld -T link.ld -melf_i386 kernel.o -o kernel.elf
