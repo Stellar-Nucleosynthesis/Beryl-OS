@@ -1,0 +1,320 @@
+extern generic_interrupt_handler
+global load_idt
+global ints_set
+global enable_ints
+global disable_ints
+
+%macro no_error_code_interrupt_handler 1   ;Macro for interrupt handlers that don't push error code on stack
+global interrupt_handler_%1
+interrupt_handler_%1:
+push dword 0                               ;Push 0 as the error code
+push dword %1                              ;Push the interrupt number for the generic interrupt handler
+jmp common_interrupt_handler
+%endmacro
+
+%macro error_code_interrupt_handler 1      ;Macro for interrupt handlers that push error code on stack
+global interrupt_handler_%1
+interrupt_handler_%1:
+push dword %1                              ;Push the interrupt number for the generic interrupt handler
+jmp common_interrupt_handler
+%endmacro
+
+section .text
+align 0x4
+
+load_idt:
+    mov eax, [esp + 4]
+    lidt [eax]
+    ret
+
+ints_set:
+    pushfd
+    pop eax
+    shr eax, 9
+    and eax, 1
+    ret
+    
+enable_ints:
+    sti
+    ret
+
+disable_ints:
+    cli
+    ret
+
+common_interrupt_handler:                  ;The common part of all interrupt handlers
+    push eax                               ;Save general-purpose registers
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+    call generic_interrupt_handler         ;Call generic interrupt handler, written in C
+    pop ebp                                ;Restore general-purpose registers
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    add esp, 8                             ;Restore esp
+    iret                                   ;Return from the interrupt
+
+;All interrupt handlers:
+no_error_code_interrupt_handler 0x0
+no_error_code_interrupt_handler 0x1
+no_error_code_interrupt_handler 0x2
+no_error_code_interrupt_handler 0x3
+no_error_code_interrupt_handler 0x4
+no_error_code_interrupt_handler 0x5
+no_error_code_interrupt_handler 0x6
+no_error_code_interrupt_handler 0x7
+error_code_interrupt_handler 0x8
+no_error_code_interrupt_handler 0x9
+error_code_interrupt_handler 0xA
+error_code_interrupt_handler 0xB
+error_code_interrupt_handler 0xC
+error_code_interrupt_handler 0xD
+error_code_interrupt_handler 0xE
+no_error_code_interrupt_handler 0xF
+no_error_code_interrupt_handler 0x10
+error_code_interrupt_handler 0x11
+no_error_code_interrupt_handler 0x12
+no_error_code_interrupt_handler 0x13
+no_error_code_interrupt_handler 0x14
+no_error_code_interrupt_handler 0x15
+no_error_code_interrupt_handler 0x16
+no_error_code_interrupt_handler 0x17
+no_error_code_interrupt_handler 0x18
+no_error_code_interrupt_handler 0x19
+no_error_code_interrupt_handler 0x1A
+no_error_code_interrupt_handler 0x1B
+no_error_code_interrupt_handler 0x1C
+no_error_code_interrupt_handler 0x1D
+no_error_code_interrupt_handler 0x1E
+no_error_code_interrupt_handler 0x1F
+no_error_code_interrupt_handler 0x20
+no_error_code_interrupt_handler 0x21
+no_error_code_interrupt_handler 0x22
+no_error_code_interrupt_handler 0x23
+no_error_code_interrupt_handler 0x24
+no_error_code_interrupt_handler 0x25
+no_error_code_interrupt_handler 0x26
+no_error_code_interrupt_handler 0x27
+no_error_code_interrupt_handler 0x28
+no_error_code_interrupt_handler 0x29
+no_error_code_interrupt_handler 0x2A
+no_error_code_interrupt_handler 0x2B
+no_error_code_interrupt_handler 0x2C
+no_error_code_interrupt_handler 0x2D
+no_error_code_interrupt_handler 0x2E
+no_error_code_interrupt_handler 0x2F
+no_error_code_interrupt_handler 0x30
+no_error_code_interrupt_handler 0x31
+no_error_code_interrupt_handler 0x32
+no_error_code_interrupt_handler 0x33
+no_error_code_interrupt_handler 0x34
+no_error_code_interrupt_handler 0x35
+no_error_code_interrupt_handler 0x36
+no_error_code_interrupt_handler 0x37
+no_error_code_interrupt_handler 0x38
+no_error_code_interrupt_handler 0x39
+no_error_code_interrupt_handler 0x3A
+no_error_code_interrupt_handler 0x3B
+no_error_code_interrupt_handler 0x3C
+no_error_code_interrupt_handler 0x3D
+no_error_code_interrupt_handler 0x3E
+no_error_code_interrupt_handler 0x3F
+no_error_code_interrupt_handler 0x40
+no_error_code_interrupt_handler 0x41
+no_error_code_interrupt_handler 0x42
+no_error_code_interrupt_handler 0x43
+no_error_code_interrupt_handler 0x44
+no_error_code_interrupt_handler 0x45
+no_error_code_interrupt_handler 0x46
+no_error_code_interrupt_handler 0x47
+no_error_code_interrupt_handler 0x48
+no_error_code_interrupt_handler 0x49
+no_error_code_interrupt_handler 0x4A
+no_error_code_interrupt_handler 0x4B
+no_error_code_interrupt_handler 0x4C
+no_error_code_interrupt_handler 0x4D
+no_error_code_interrupt_handler 0x4E
+no_error_code_interrupt_handler 0x4F
+no_error_code_interrupt_handler 0x50
+no_error_code_interrupt_handler 0x51
+no_error_code_interrupt_handler 0x52
+no_error_code_interrupt_handler 0x53
+no_error_code_interrupt_handler 0x54
+no_error_code_interrupt_handler 0x55
+no_error_code_interrupt_handler 0x56
+no_error_code_interrupt_handler 0x57
+no_error_code_interrupt_handler 0x58
+no_error_code_interrupt_handler 0x59
+no_error_code_interrupt_handler 0x5A
+no_error_code_interrupt_handler 0x5B
+no_error_code_interrupt_handler 0x5C
+no_error_code_interrupt_handler 0x5D
+no_error_code_interrupt_handler 0x5E
+no_error_code_interrupt_handler 0x5F
+no_error_code_interrupt_handler 0x60
+no_error_code_interrupt_handler 0x61
+no_error_code_interrupt_handler 0x62
+no_error_code_interrupt_handler 0x63
+no_error_code_interrupt_handler 0x64
+no_error_code_interrupt_handler 0x65
+no_error_code_interrupt_handler 0x66
+no_error_code_interrupt_handler 0x67
+no_error_code_interrupt_handler 0x68
+no_error_code_interrupt_handler 0x69
+no_error_code_interrupt_handler 0x6A
+no_error_code_interrupt_handler 0x6B
+no_error_code_interrupt_handler 0x6C
+no_error_code_interrupt_handler 0x6D
+no_error_code_interrupt_handler 0x6E
+no_error_code_interrupt_handler 0x6F
+no_error_code_interrupt_handler 0x70
+no_error_code_interrupt_handler 0x71
+no_error_code_interrupt_handler 0x72
+no_error_code_interrupt_handler 0x73
+no_error_code_interrupt_handler 0x74
+no_error_code_interrupt_handler 0x75
+no_error_code_interrupt_handler 0x76
+no_error_code_interrupt_handler 0x77
+no_error_code_interrupt_handler 0x78
+no_error_code_interrupt_handler 0x79
+no_error_code_interrupt_handler 0x7A
+no_error_code_interrupt_handler 0x7B
+no_error_code_interrupt_handler 0x7C
+no_error_code_interrupt_handler 0x7D
+no_error_code_interrupt_handler 0x7E
+no_error_code_interrupt_handler 0x7F
+no_error_code_interrupt_handler 0x80
+no_error_code_interrupt_handler 0x81
+no_error_code_interrupt_handler 0x82
+no_error_code_interrupt_handler 0x83
+no_error_code_interrupt_handler 0x84
+no_error_code_interrupt_handler 0x85
+no_error_code_interrupt_handler 0x86
+no_error_code_interrupt_handler 0x87
+no_error_code_interrupt_handler 0x88
+no_error_code_interrupt_handler 0x89
+no_error_code_interrupt_handler 0x8A
+no_error_code_interrupt_handler 0x8B
+no_error_code_interrupt_handler 0x8C
+no_error_code_interrupt_handler 0x8D
+no_error_code_interrupt_handler 0x8E
+no_error_code_interrupt_handler 0x8F
+no_error_code_interrupt_handler 0x90
+no_error_code_interrupt_handler 0x91
+no_error_code_interrupt_handler 0x92
+no_error_code_interrupt_handler 0x93
+no_error_code_interrupt_handler 0x94
+no_error_code_interrupt_handler 0x95
+no_error_code_interrupt_handler 0x96
+no_error_code_interrupt_handler 0x97
+no_error_code_interrupt_handler 0x98
+no_error_code_interrupt_handler 0x99
+no_error_code_interrupt_handler 0x9A
+no_error_code_interrupt_handler 0x9B
+no_error_code_interrupt_handler 0x9C
+no_error_code_interrupt_handler 0x9D
+no_error_code_interrupt_handler 0x9E
+no_error_code_interrupt_handler 0x9F
+no_error_code_interrupt_handler 0xA0
+no_error_code_interrupt_handler 0xA1
+no_error_code_interrupt_handler 0xA2
+no_error_code_interrupt_handler 0xA3
+no_error_code_interrupt_handler 0xA4
+no_error_code_interrupt_handler 0xA5
+no_error_code_interrupt_handler 0xA6
+no_error_code_interrupt_handler 0xA7
+no_error_code_interrupt_handler 0xA8
+no_error_code_interrupt_handler 0xA9
+no_error_code_interrupt_handler 0xAA
+no_error_code_interrupt_handler 0xAB
+no_error_code_interrupt_handler 0xAC
+no_error_code_interrupt_handler 0xAD
+no_error_code_interrupt_handler 0xAE
+no_error_code_interrupt_handler 0xAF
+no_error_code_interrupt_handler 0xB0
+no_error_code_interrupt_handler 0xB1
+no_error_code_interrupt_handler 0xB2
+no_error_code_interrupt_handler 0xB3
+no_error_code_interrupt_handler 0xB4
+no_error_code_interrupt_handler 0xB5
+no_error_code_interrupt_handler 0xB6
+no_error_code_interrupt_handler 0xB7
+no_error_code_interrupt_handler 0xB8
+no_error_code_interrupt_handler 0xB9
+no_error_code_interrupt_handler 0xBA
+no_error_code_interrupt_handler 0xBB
+no_error_code_interrupt_handler 0xBC
+no_error_code_interrupt_handler 0xBD
+no_error_code_interrupt_handler 0xBE
+no_error_code_interrupt_handler 0xBF
+no_error_code_interrupt_handler 0xC0
+no_error_code_interrupt_handler 0xC1
+no_error_code_interrupt_handler 0xC2
+no_error_code_interrupt_handler 0xC3
+no_error_code_interrupt_handler 0xC4
+no_error_code_interrupt_handler 0xC5
+no_error_code_interrupt_handler 0xC6
+no_error_code_interrupt_handler 0xC7
+no_error_code_interrupt_handler 0xC8
+no_error_code_interrupt_handler 0xC9
+no_error_code_interrupt_handler 0xCA
+no_error_code_interrupt_handler 0xCB
+no_error_code_interrupt_handler 0xCC
+no_error_code_interrupt_handler 0xCD
+no_error_code_interrupt_handler 0xCE
+no_error_code_interrupt_handler 0xCF
+no_error_code_interrupt_handler 0xD0
+no_error_code_interrupt_handler 0xD1
+no_error_code_interrupt_handler 0xD2
+no_error_code_interrupt_handler 0xD3
+no_error_code_interrupt_handler 0xD4
+no_error_code_interrupt_handler 0xD5
+no_error_code_interrupt_handler 0xD6
+no_error_code_interrupt_handler 0xD7
+no_error_code_interrupt_handler 0xD8
+no_error_code_interrupt_handler 0xD9
+no_error_code_interrupt_handler 0xDA
+no_error_code_interrupt_handler 0xDB
+no_error_code_interrupt_handler 0xDC
+no_error_code_interrupt_handler 0xDD
+no_error_code_interrupt_handler 0xDE
+no_error_code_interrupt_handler 0xDF
+no_error_code_interrupt_handler 0xE0
+no_error_code_interrupt_handler 0xE1
+no_error_code_interrupt_handler 0xE2
+no_error_code_interrupt_handler 0xE3
+no_error_code_interrupt_handler 0xE4
+no_error_code_interrupt_handler 0xE5
+no_error_code_interrupt_handler 0xE6
+no_error_code_interrupt_handler 0xE7
+no_error_code_interrupt_handler 0xE8
+no_error_code_interrupt_handler 0xE9
+no_error_code_interrupt_handler 0xEA
+no_error_code_interrupt_handler 0xEB
+no_error_code_interrupt_handler 0xEC
+no_error_code_interrupt_handler 0xED
+no_error_code_interrupt_handler 0xEE
+no_error_code_interrupt_handler 0xEF
+no_error_code_interrupt_handler 0xF0
+no_error_code_interrupt_handler 0xF1
+no_error_code_interrupt_handler 0xF2
+no_error_code_interrupt_handler 0xF3
+no_error_code_interrupt_handler 0xF4
+no_error_code_interrupt_handler 0xF5
+no_error_code_interrupt_handler 0xF6
+no_error_code_interrupt_handler 0xF7
+no_error_code_interrupt_handler 0xF8
+no_error_code_interrupt_handler 0xF9
+no_error_code_interrupt_handler 0xFA
+no_error_code_interrupt_handler 0xFB
+no_error_code_interrupt_handler 0xFC
+no_error_code_interrupt_handler 0xFD
+no_error_code_interrupt_handler 0xFE
+no_error_code_interrupt_handler 0xFF
