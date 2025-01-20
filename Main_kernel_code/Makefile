@@ -15,7 +15,8 @@ IO_DIR = ../Input_Output
 INTERRUPTS_DIR = ../Interrupts
 MEMORY_DIR = ../Memory_management
 LIB_DIR = ../Libs
-KERNEL_DIR = .
+MODULES_DIR = ../Modules
+KERNEL_DIR = ../Main_kernel_code
 
 ASM_DIR = Assembly_source_code
 C_DIR = C_source_code
@@ -88,4 +89,5 @@ $(ISO_DIR)/boot/kernel.elf: $(ALL_OBJ)
 
 # Create ISO
 $(ISO_NAME): $(ISO_DIR)/boot/kernel.elf
+	cp $(MODULES_DIR)/Ready_files/* $(ISO_DIR)/modules
 	$(ISOGEN) -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o $@ $(ISO_DIR)
