@@ -57,10 +57,13 @@ void pic_set_mask(uint8_t mask1, uint8_t mask2) {
 
 void pic_ack_interrupt(uint8_t int_num)
 {
-	if (int_num < PIC1_INT_OFFSET || int_num > PIC2_INT_OFFSET + 7) return;
-	if (int_num > PIC1_INT_OFFSET + 7)
+	if (int_num >= PIC1_INT_OFFSET && int_num <= PIC1_INT_OFFSET + 7)
+	{
+		outb(PIC1_COMMAND, PIC_EOI);
+	}
+	else if (int_num >= PIC2_INT_OFFSET && int_num <= PIC2_INT_OFFSET + 7)
 	{
 		outb(PIC2_COMMAND, PIC_EOI);
+		outb(PIC1_COMMAND, PIC_EOI);
 	}
-	outb(PIC1_COMMAND, PIC_EOI);
 }

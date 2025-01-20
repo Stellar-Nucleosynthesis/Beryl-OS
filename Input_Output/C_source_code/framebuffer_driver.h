@@ -31,12 +31,15 @@ int fb_get_cursor_position();
 void fb_set_cursor(int position);
 
 //Function for moving cursor n times forwards (or backwards, if the value is negative)
-void fb_move_cursor(int n)
+void fb_move_cursor(int n);
 
 //Function for writing a character and advancing the cursor one position forward
-void fb_write(char ch, uint8_t fg_color, uint8_t bg_color, uint8_t blink);
+void fb_write(char ch);
+
+//Function for writing a string and advancing the cursor forward
+void fb_write_string(char* ch);
 
 //Function for setting background color
-void fb_set_background(uint8_t bg_color);
+void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink);
 
 #endif

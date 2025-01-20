@@ -4,6 +4,7 @@
 #include "interrupt_operations.h"
 #include "interrupt_handlers.h"
 #include "idt.h"
+#include "framebuffer_driver.h"
 
 #define GDT_SIZE  0x03  //Only 3 entries are needed for a basic GDT
 #define IDT_SIZE  0xFF  //IDT size in x86             
@@ -36,6 +37,10 @@ void kmain()
 
 	pic_remap(PIC1_INT_OFFSET, PIC2_INT_OFFSET);
 	pic_set_mask(0b11111101, 0b11111111);           //Only interrupts from the keyboard are enabled
+
+	fb_set_color(LIGHT_GREY, RED, NO_BLINK);
+	fb_set_cursor(0);
+	fb_write('>');
 
 	if (!ints_set()) enable_ints();
 	while (1);

@@ -39,30 +39,60 @@ void fb_move_cursor(int n)
 	fb_set_cursor(position + n);
 }
 
-void fb_write(char ch, uint8_t fg_color, uint8_t bg_color, uint8_t blink)
+void fb_write(char ch)
 {
 	int position = fb_get_cursor_position();
 	if (position == ROWS * COLUMNS - 1) return;
-	uint8_t color = 0;
-	blink = (blink & 0x1) << 7;
-	bg_color = (bg_color & 0x7) << 4;
-	fg_color = (fg_color & 0xF);
-	color = blink | bg_color | fg_color;
+
+	if (ch == '\n') 
+	{
+		int row = position / COLUMNS;
+		if (row == ROWS - 1) return;
+		fb_set_cursor((row + 1) * COLUMNS);
+		return;
+	}
+
+	if (ch == '\b')
+	{
+		int column = position % COLUMNS;
+		int row = position / COLUMNS;
+		fb_set_cursor(--position);
+		framebuffer[position * 2] = ' ';
+		if (column == 0 && row != 0) 
+		{
+			while (framebuffer[(position - 1) * 2] == ' ' && position != 0) 
+			{
+				fb_set_cursor(--position);
+			}
+		}
+		return;
+	}
+
 	framebuffer[position * 2] = ch;
-	framebuffer[position * 2 + 1] = color;
 	fb_set_cursor(position + 1);
 }
 
-void fb_set_background(uint8_t bg_color)
+void fb_write_string(char* ch)
 {
-	bg_color = (bg_color & 0x7);
-	uint8_t color = (bg_color << 4) | bg_color;
+	int count = 0;
+	while (ch[count] != 0) 
+	{
+		fb_write(ch[count++]);
+	}
+}
+
+void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink)
+{
+	bg_color = (bg_color & 0x7) << 4;
+	fg_color = fg_color & 0xF;
+	blink = (blink & 0x1) << 7;
+	uint8_t color = blink | bg_color | fg_color;
 	for (int i = 0; i < ROWS; ++i) 
 	{
 		for (int j = 0; j < COLUMNS; ++j)
 		{
 			int position = i * COLUMNS + j;
-			framebuffer[position * 2] = 'A';
+			framebuffer[position * 2] = ' ';
 			framebuffer[position * 2 + 1] = color;
 		}
 	}
