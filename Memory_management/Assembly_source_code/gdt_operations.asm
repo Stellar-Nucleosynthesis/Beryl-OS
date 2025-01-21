@@ -1,5 +1,6 @@
 global load_gdt
 global load_segment_selectors
+global enter_protected_mode
 
 section .text
 align 0x4
@@ -20,4 +21,10 @@ load_segment_selectors:
     push dummy_label
     retf
 dummy_label:
+    ret
+
+enter_protected_mode:
+    mov eax, cr0
+    or eax, 0x00000001
+    mov cr0, eax
     ret

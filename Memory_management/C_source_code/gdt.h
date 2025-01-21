@@ -19,4 +19,7 @@ void load_gdt(struct gdt_descriptor* ptr);
 //Function for loading segment selectors in segment registers
 void load_segment_selectors(uint16_t cs_selector, uint16_t ds_selector, uint16_t es_selector, uint16_t ss_selector);
 
+//Function for entering 32-bit protected mode
+void enter_protected_mode();
+
 #endif
