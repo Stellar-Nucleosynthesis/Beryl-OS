@@ -1,10 +1,7 @@
-global start
+global higher_half_start
 extern kmain                                    ;Declaration of an external function kmain
 
-KERNEL_STACK_SIZE equ 0x100000                  ;Stack size
-MAGIC_NUMBER equ 0x1BADB002
-FLAGS equ 0x00000001                        ;Align modules
-CHECKSUM equ -(MAGIC_NUMBER + FLAGS)
+KERNEL_STACK_SIZE equ 0x1000                    ;Stack size
 
 section .bss
 align 0x4
@@ -13,10 +10,8 @@ kernel_stack:
 
 section .text
 align 0x4
-    dd MAGIC_NUMBER
-    dd FLAGS
-    dd CHECKSUM
-start:
+
+higher_half_start:
     mov esp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing stack pointer
     mov ebp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing base pointer
     push ebx                                    ;Modules info structure location

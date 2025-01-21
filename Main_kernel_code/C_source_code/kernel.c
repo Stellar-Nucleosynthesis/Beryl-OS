@@ -32,15 +32,14 @@ void setup_segmentation()
 	load_segment_selectors(0x8, 0x10, 0x10, 0x10);
 }
 
-void setup_paging() 
+void setup_new_pd() 
 {
 	for (int i = 0; i < PD_SIZE; ++i)
 	{
-		fill_pde_large((struct pde_large*)kernel_PD + i, 0x400000 * i, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1);
+		kernel_PD[i] = 0;
 	}
+	fill_pde_large((struct pde_large*)kernel_PD + 0xC00, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1);
 	load_pd((uint32_t)kernel_PD);
-	enable_large_pages();
-	enable_paging();
 }
 
 void setup_interrupt_table() 
@@ -77,16 +76,16 @@ void print_modules_info(uint32_t multiboot_info_addr)
 
 void kmain(uint32_t multiboot_info_addr)
 {
-	if(ints_set()) disable_ints();
-	setup_segmentation();
-	setup_paging();
-	setup_interrupt_table();
-	configure_pic();
-	if (!ints_set()) enable_ints();
+	//if(ints_set()) disable_ints();
+	//setup_segmentation();
+	//setup_new_pd();
+	//setup_interrupt_table();
+	//configure_pic();
+	//if (!ints_set()) enable_ints();
 
 	fb_set_color(LIGHT_GREY, RED, NO_BLINK);
 	fb_set_cursor(0);
 
-	print_modules_info(multiboot_info_addr);
+	//print_modules_info(multiboot_info_addr);
 	while (1);
 }

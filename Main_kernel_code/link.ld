@@ -2,22 +2,23 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0x100000;
-    
-    .text : ALIGN(0x1000) {
-        *c_runtime_env_loader.o(.text)
-        *(.*)
+    . = 0xC0100000;
+
+    .text ALIGN(4K) : AT(ADDR(.text) - 0xC0000000)
+    {
+        *(.text)
     }
-    
-    .rodata : ALIGN(0x1000) {
-        *(SORT_BY_ALIGNMENT(.rodata*))
+    .rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xC0000000)
+    {
+        *(.rodata)
     }
-    
-    .data : ALIGN(0x1000) {
-        *(SORT_BY_ALIGNMENT(.data*))
+    .data ALIGN(4K) : AT(ADDR(.data) - 0xC0000000)
+    {
+        *(.data)
     }
-    
-    .bss : ALIGN(0x1000) {
-        *(SORT_BY_ALIGNMENT(.bss*))
+    .bss ALIGN(4K) : AT(ADDR(.bss) - 0xC0000000)
+    {
+        *(COMMON)
+        *(.bss)
     }
 }
