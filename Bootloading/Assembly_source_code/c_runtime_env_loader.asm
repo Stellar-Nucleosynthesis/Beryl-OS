@@ -14,5 +14,6 @@ align 0x4
 higher_half_start:
     mov esp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing stack pointer
     mov ebp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing base pointer
-    push ebx                                    ;Modules info structure location
+    push eax                                    ;Multiboot magic number
+    push ebx                                    ;Multiboot info structure location
     call kmain                                  

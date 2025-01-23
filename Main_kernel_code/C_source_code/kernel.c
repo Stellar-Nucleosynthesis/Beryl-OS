@@ -10,6 +10,8 @@
 #include "interrupt_handlers.h"
 #include "pic.h"
 
+#include "multiboot.h"
+
 #define GDT_SIZE  0x03  //Only 3 entries are needed for a basic GDT
 #define IDT_SIZE  0xFF  //IDT size in x86    
 #define PD_SIZE   0x400 //PD size in x86
@@ -62,7 +64,55 @@ void setup_new_pd()
 	load_pd(get_phys_addr((uint32_t)&kernel_PD));
 }
 
-void kmain(uint32_t multiboot_info_addr)
+void display_memory_info(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
+{
+	if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC) 
+	{
+		fb_write_string("Invalid multiboot structure!\n");
+		return;
+	}
+
+	multiboot_info_addr += KERNEL_OFFSET;
+	multiboot_info_t* multiboot_info_ptr = (multiboot_info_t*)multiboot_info_addr;
+
+	fb_write_string("Available memory: ");
+	fb_write_uint32(multiboot_info_ptr->mem_lower);
+	fb_write('-');
+	fb_write_uint32(multiboot_info_ptr->mem_upper);
+	fb_write('\n');
+
+	if (!(multiboot_info_ptr->flags >> 6 & 0x1))
+	{
+		fb_write_string("Invalid memory map!\n");
+		return;
+	}
+
+	fb_write_string("Free memory regions: \n");
+
+	uint32_t mmap_length = multiboot_info_ptr->mmap_length;
+	uint32_t mmap_addr = multiboot_info_ptr->mmap_addr;
+	multiboot_memory_map_t* mmap_ptr = (multiboot_memory_map_t*)(mmap_addr + KERNEL_OFFSET);
+
+	for (uint32_t offset = 0; offset < mmap_length;)
+	{
+		multiboot_memory_map_t* entry = (multiboot_memory_map_t*)((uint8_t*)mmap_ptr + offset);
+
+		if (entry->type == 1) 
+		{
+			fb_write_string("Address: ");
+			fb_write_uint32((uint32_t)entry->addr_low);
+			fb_write('\n');
+			fb_write_string("Length: ");
+			fb_write_uint32((uint32_t)entry->len_low);
+			fb_write('\n');
+			fb_write('\n');
+		}
+
+		offset += entry->size + sizeof(entry->size);
+	}
+}
+
+void kmain(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 {
 	if(ints_set()) disable_ints();
 	setup_segmentation();
@@ -72,12 +122,9 @@ void kmain(uint32_t multiboot_info_addr)
 	setup_new_pd();
 
 	fb_set_color(LIGHT_GREY, RED, NO_BLINK);
-	fb_set_cursor(0);
-	fb_write_string("Kernel has loaded\n");
-	int i;
-	fb_write_string("Kernel stack address: ");
-	fb_write_uint32((uint32_t)&i);
-	fb_write('\n');
+	fb_set_cursor(0);	
+
+	display_memory_info(multiboot_info_addr, multiboot_magic);
 
 	while (1);
 }

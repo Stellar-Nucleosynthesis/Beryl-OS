@@ -23,21 +23,20 @@ align 0x4
     dd CHECKSUM
 
 start:
-    mov eax, PAGE_FLAGS | 0x00000000
+    mov edx, PAGE_FLAGS | 0x00000000           ;EAX and EBX contain multiboot information and must not be used!
 
     mov ecx, page_directory - 0xC0000000
-    mov [ecx + 0x000], eax
-    mov [ecx + 0xC00], eax
+    mov [ecx + 0x000], edx
+    mov [ecx + 0xC00], edx
 
-    mov eax, cr4
-    or eax, 0x00000010
-    mov cr4, eax
+    mov edx, cr4
+    or edx, 0x00000010
+    mov cr4, edx
 
-    mov eax, ecx
-    mov cr3, eax
+    mov cr3, ecx
 
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
+    mov edx, cr0
+    or edx, 0x80000000
+    mov cr0, edx
 
     jmp higher_half_start + 0xC0000000
