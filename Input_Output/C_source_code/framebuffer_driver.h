@@ -39,6 +39,9 @@ void fb_write(char ch);
 //Function for writing a string and advancing the cursor forward
 void fb_write_string(char* ch);
 
+//Function for writing hexadecimal representation of a 32-bit number and advancing the cursor forward
+void fb_write_uint32(uint32_t value);
+
 //Function for setting background color
 void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink);
 

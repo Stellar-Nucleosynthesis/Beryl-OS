@@ -1,5 +1,5 @@
 global higher_half_start
-extern kmain                                    ;Declaration of an external function kmain
+extern kmain                                    ;Declaration of main kernel function function kmain
 
 KERNEL_STACK_SIZE equ 0x1000                    ;Stack size
 

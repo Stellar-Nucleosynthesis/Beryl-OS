@@ -41,3 +41,8 @@ void fill_pte(struct pte* pte_ptr, uint32_t pf_addr, uint32_t g, uint32_t pat, u
 	pte_ptr->read_write = rw & 0x1;
 	pte_ptr->present = p & 0x1;
 }
+
+uint32_t get_phys_addr(uint32_t addr) 
+{
+	return addr - KERNEL_OFFSET;
+}

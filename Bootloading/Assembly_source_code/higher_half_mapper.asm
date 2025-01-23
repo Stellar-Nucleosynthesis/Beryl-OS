@@ -24,19 +24,20 @@ align 0x4
 
 start:
     mov eax, PAGE_FLAGS | 0x00000000
-    mov ebx, page_directory - 0xC0000000
-    mov [ebx + 0x000], eax
-    mov [ebx + 0xC00], eax
+
+    mov ecx, page_directory - 0xC0000000
+    mov [ecx + 0x000], eax
+    mov [ecx + 0xC00], eax
 
     mov eax, cr4
     or eax, 0x00000010
     mov cr4, eax
 
-    mov eax, ebx
+    mov eax, ecx
     mov cr3, eax
 
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax
 
-    call higher_half_start
+    jmp higher_half_start + 0xC0000000

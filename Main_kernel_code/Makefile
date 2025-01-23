@@ -6,7 +6,7 @@ ISOGEN = genisoimage
 
 # Flags
 ASFLAGS = -f elf32
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -c
+CFLAGS = -m32 -nostdlib -nostdinc -ffreestanding -fno-pic -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -c
 LDFLAGS = -T link.ld -m elf_i386
 
 # Directories (relative to Main_kernel_code)

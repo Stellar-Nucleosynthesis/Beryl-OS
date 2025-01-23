@@ -2,23 +2,33 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0xC0100000;
+    KERNEL_VMA = 0xC0000000;
+    KERNEL_LMA = 0x00100000;
+    
+    . = KERNEL_VMA + KERNEL_LMA;
 
-    .text ALIGN(4K) : AT(ADDR(.text) - 0xC0000000)
+    .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_VMA)
     {
-        *(.text)
+        *higher_half_mapper.o (.text)
+        *(.text .text.*)
     }
-    .rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xC0000000)
+
+    .rodata ALIGN(4K) : AT(ADDR(.rodata) - KERNEL_VMA)
     {
-        *(.rodata)
+        *(.rodata .rodata.*)
     }
-    .data ALIGN(4K) : AT(ADDR(.data) - 0xC0000000)
+
+    .data ALIGN(4K) : AT(ADDR(.data) - KERNEL_VMA)
     {
-        *(.data)
+        *(.data .data.*)
     }
-    .bss ALIGN(4K) : AT(ADDR(.bss) - 0xC0000000)
+
+    .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_VMA)
     {
         *(COMMON)
-        *(.bss)
+        *(.bss .bss.*)
     }
+
+    _kernel_start = KERNEL_VMA + KERNEL_LMA;
+    _kernel_end = .;
 }

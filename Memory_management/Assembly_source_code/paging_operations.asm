@@ -8,6 +8,7 @@ align 0x4
 load_pd:
     mov eax, [esp + 4]
     mov cr3, eax
+    mov eax, eax  ;Dummy operation
     ret
 
 enable_paging:

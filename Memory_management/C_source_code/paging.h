@@ -3,6 +3,8 @@
 
 #include "stdint.h"
 
+#define KERNEL_OFFSET 0xC0000000
+
 //4-KB page directory entry
 struct pde {
     uint32_t present : 1;          //Bit 0: Page present in memory
@@ -66,5 +68,8 @@ void fill_pde_large(struct pde_large* pde_ptr, uint32_t pf_addr, uint32_t pat, u
 
 //Fills page table entry
 void fill_pte(struct pte* pte_ptr, uint32_t pf_addr, uint32_t g, uint32_t pat, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p);
+
+//Returns physical equivalent of a kernel virtual address
+uint32_t get_phys_addr(uint32_t addr);
 
 #endif

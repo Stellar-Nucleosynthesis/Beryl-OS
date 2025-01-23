@@ -15,7 +15,7 @@ struct idt_descriptor
 } __attribute__((packed));
 
 //Load IDT table
-void load_idt(struct idt_descriptor* ptr);
+void load_idt(uint32_t idt_descriptor_ptr);
 
 struct idt_entry 
 {

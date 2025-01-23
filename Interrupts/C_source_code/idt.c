@@ -24,10 +24,15 @@ void fill_idt_entry(struct idt_entry* entry, uint16_t selector, uint32_t offset,
 
 void keyboard_handler();
 
+void page_fault_handler(uint32_t cs, uint32_t eip);
+
 void generic_interrupt_handler(struct cpu_state cpu_state, uint32_t int_num, struct stack_state stack_state)
 {
     switch (int_num) 
     {
+    case 0x0E:
+        page_fault_handler(stack_state.cs, stack_state.eip);
+        break;
     case 0x21:
         keyboard_handler();
         break;
@@ -73,4 +78,14 @@ void keyboard_handler()
             }
         }
     }
+}
+
+void page_fault_handler(uint32_t cs, uint32_t eip)
+{
+    fb_write_string("Page fault: eip: ");
+    fb_write_uint32(eip);
+    fb_write_string("; cs: ");
+    fb_write_uint32(cs);
+    fb_write('\n');
+    for (long long int i = 0; i < 1000000000; i++);
 }

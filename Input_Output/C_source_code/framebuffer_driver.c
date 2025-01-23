@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "paging.h"
 #include "port_io.h"
 
 #define COMMAND_PORT 0x3D4
@@ -10,7 +11,7 @@
 #define ROWS         25
 #define COLUMNS      80
 
-int8_t* framebuffer = (int8_t*)0x000B8000;
+uint8_t* framebuffer = (uint8_t*)(0x000B8000 + KERNEL_OFFSET);
 
 int fb_get_cursor_position() 
 {
@@ -80,6 +81,19 @@ void fb_write_string(char* ch)
 		fb_write(ch[count++]);
 	}
 }
+
+void fb_write_uint32(uint32_t value) {
+	char hex_chars[] = "0123456789ABCDEF";
+	char buffer[11];
+	buffer[0] = '0';
+	buffer[1] = 'x';
+	for (int i = 0; i < 8; i++) {
+		buffer[2 + i] = hex_chars[(value >> ((7 - i) * 4)) & 0xF];
+	}
+	buffer[10] = '\0';
+	fb_write_string(buffer);
+}
+
 
 void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink)
 {
