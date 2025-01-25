@@ -4,6 +4,7 @@
 
 #include "gdt.h"
 #include "paging.h"
+#include "kernel_memory_allocator.h"
 
 #include "idt.h"
 #include "interrupt_operations.h"
@@ -112,6 +113,11 @@ void display_memory_info(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 	}
 }
 
+extern uint8_t kernel_virtual_start;
+extern uint8_t kernel_physical_start;
+extern uint8_t kernel_virtual_end;
+extern uint8_t kernel_physical_end;
+
 void kmain(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 {
 	if(ints_set()) disable_ints();
@@ -122,9 +128,54 @@ void kmain(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 	setup_new_pd();
 
 	fb_set_color(LIGHT_GREY, RED, NO_BLINK);
-	fb_set_cursor(0);	
+	fb_set_cursor(0);
 
-	display_memory_info(multiboot_info_addr, multiboot_magic);
+	if (multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
+	{
+		fb_write_string("Invalid multiboot structure!\n");
+	}
+	else
+	{
+		multiboot_info_addr += KERNEL_OFFSET;
+		multiboot_info_t* multiboot_info_ptr = (multiboot_info_t*)multiboot_info_addr;
 
+		fb_write_string("Available memory: ");
+		fb_write_uint32(multiboot_info_ptr->mem_lower);
+		fb_write('-');
+		fb_write_uint32(multiboot_info_ptr->mem_upper);
+		fb_write('\n');
+	}
+
+	uint32_t heap_start_addr = (uint32_t)&kernel_virtual_end;
+	uint32_t heap_end_addr = 0xC0400000 - 1;
+
+	fb_write_string("Kernel virtual space: ");
+	fb_write_uint32((uint32_t)&kernel_virtual_start);
+	fb_write('-');
+	fb_write_uint32((uint32_t)&kernel_virtual_end);
+	fb_write('\n');
+	fb_write_string("Kernel physical space: ");
+	fb_write_uint32((uint32_t)&kernel_physical_start);
+	fb_write('-');
+	fb_write_uint32((uint32_t)&kernel_physical_end);
+	fb_write('\n');
+	fb_write_string("Kernel heap virtual space: ");
+	fb_write_uint32(heap_start_addr);
+	fb_write('-');
+	fb_write_uint32(heap_end_addr);
+	fb_write('\n');
+
+	int heap_init_res = init_kernel_memory_allocator(heap_start_addr, heap_end_addr, kernel_PD, 0x3FF);
+	fb_write_string("Kernel heap initialization result: ");
+	fb_write_uint32((uint32_t)heap_init_res);
+	fb_write('\n');
+	void* kmalloc1_res = kmalloc(20);
+	fb_write_string("kmalloc result (20 bytes): ");
+	fb_write_uint32((uint32_t)kmalloc1_res);
+	fb_write('\n');
+	void* kmalloc2_res = kmalloc(40);
+	fb_write_string("kmalloc result (40 bytes): ");
+	fb_write_uint32((uint32_t)kmalloc2_res);
+	fb_write('\n');
 	while (1);
 }

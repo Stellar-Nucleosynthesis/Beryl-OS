@@ -7,6 +7,9 @@ SECTIONS
     
     . = KERNEL_VMA + KERNEL_LMA;
 
+    kernel_virtual_start = .;
+    kernel_physical_start = . - 0xC0000000;
+
     .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_VMA)
     {
         *higher_half_mapper.o (.text)
@@ -29,6 +32,6 @@ SECTIONS
         *(.bss .bss.*)
     }
 
-    _kernel_start = KERNEL_VMA + KERNEL_LMA;
-    _kernel_end = .;
+    kernel_virtual_end = .;
+    kernel_physical_end = . - 0xC0000000;
 }
