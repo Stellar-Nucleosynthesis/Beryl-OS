@@ -1,0 +1,14 @@
+The Libs directory provides the project with std-like libraries.
+
+
+---multiboot.h---
+A slightly modified copy of the multiboot header.
+https://www.gnu.org/software/grub/manual/multiboot/html_node/multiboot_002eh.html
+
+
+---stdbool.h---
+This file defines the bool type and true/false constants.
+
+
+---stdint.h---
+This file defines various numerical data types and constants, such as uint_32t and NULL.

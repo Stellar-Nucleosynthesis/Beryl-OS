@@ -1,9 +1,9 @@
 #include "stdint.h"
-#include "gdt.h"
+#include "gdt_setup.h"
 
-void fill_gdt_entry(void* ptr, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags)
+void fill_gdt_entry(gdt_entry* entry, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags)
 {
-    uint8_t* target = (uint8_t*)ptr;
+    uint8_t* target = (uint8_t*)entry;
 
     target[0] = limit & 0xFF;
     target[1] = (limit >> 8) & 0xFF;

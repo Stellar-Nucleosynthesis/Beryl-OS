@@ -1,7 +1,7 @@
 #include "paging.h"
 #include "stdint.h"
 
-void fill_pde(struct pde* pde_ptr, uint32_t pt_addr, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p) 
+void fill_pde(pde* pde_ptr, uint32_t pt_addr, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p) 
 {
 	pde_ptr->pt_address = pt_addr >> 12;
 	pde_ptr->available4 = 0x0;
@@ -14,7 +14,7 @@ void fill_pde(struct pde* pde_ptr, uint32_t pt_addr, uint32_t pcd, uint32_t pwt,
 	pde_ptr->present = p & 0x1;
 }
 
-void fill_pde_large(struct pde_large* pde_ptr, uint32_t pf_addr, uint32_t pat, uint32_t g, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p)
+void fill_pde_large(pde_large* pde_ptr, uint32_t pf_addr, uint32_t pat, uint32_t g, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p)
 {
 	pde_ptr->pf_address = pf_addr >> 22;
 	pde_ptr->reserved = 0x0;
@@ -29,7 +29,7 @@ void fill_pde_large(struct pde_large* pde_ptr, uint32_t pf_addr, uint32_t pat, u
 	pde_ptr->present = p & 0x1;
 }
 
-void fill_pte(struct pte* pte_ptr, uint32_t pf_addr, uint32_t g, uint32_t pat, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p) 
+void fill_pte(pte* pte_ptr, uint32_t pf_addr, uint32_t g, uint32_t pat, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p) 
 {
 	pte_ptr->pf_address = pf_addr >> 12;
 	pte_ptr->available3 = 0x0;

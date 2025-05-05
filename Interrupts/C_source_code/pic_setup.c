@@ -1,5 +1,5 @@
 #include "stdint.h"
-#include "pic.h"
+#include "pic_setup.h"
 #include "port_io.h"
 
 //PIC macros definition
@@ -42,17 +42,24 @@ void pic_remap(uint8_t offset1, uint8_t offset2)
 	outb(PIC2_DATA, mask2);
 }
 
-uint8_t pic1_get_mask() {
+uint8_t pic1_get_mask() 
+{
 	return inb(PIC1_DATA);
 }
 
-uint8_t pic2_get_mask() {
+uint8_t pic2_get_mask() 
+{
 	return inb(PIC2_DATA);
 }
 
-void pic_set_mask(uint8_t mask1, uint8_t mask2) {
-	outb(PIC1_DATA, mask1);
-	outb(PIC2_DATA, mask2);
+void pic1_set_mask(uint8_t mask)
+{
+	outb(PIC1_DATA, mask);
+}
+
+void pic2_set_mask(uint8_t mask)
+{
+	outb(PIC2_DATA, mask);
 }
 
 void pic_ack_interrupt(uint8_t int_num)

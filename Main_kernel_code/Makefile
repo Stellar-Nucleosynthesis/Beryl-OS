@@ -20,6 +20,7 @@ KERNEL_DIR = ../Main_kernel_code
 
 ASM_DIR = Assembly_source_code
 C_DIR = C_source_code
+H_DIR = Header_files
 OBJ_DIR = Object_files
 ISO_DIR = iso
 ISO_NAME = os.iso
@@ -36,11 +37,12 @@ C_SRC = $(wildcard $(BOOTLOADING_DIR)/$(C_DIR)/*.c \
                   $(MEMORY_DIR)/$(C_DIR)/*.c \
                   $(KERNEL_DIR)/$(C_DIR)/*.c)
 
-CFLAGS += -I$(BOOTLOADING_DIR)/$(C_DIR)
-CFLAGS += -I$(IO_DIR)/$(C_DIR)
-CFLAGS += -I$(INTERRUPTS_DIR)/$(C_DIR)
-CFLAGS += -I$(MEMORY_DIR)/$(C_DIR)
-CFLAGS += -I$(KERNEL_DIR)/$(C_DIR)
+#Collect headers
+CFLAGS += -I$(BOOTLOADING_DIR)/$(H_DIR)
+CFLAGS += -I$(IO_DIR)/$(H_DIR)
+CFLAGS += -I$(INTERRUPTS_DIR)/$(H_DIR)
+CFLAGS += -I$(MEMORY_DIR)/$(H_DIR)
+CFLAGS += -I$(KERNEL_DIR)/$(H_DIR)
 CFLAGS += -I$(LIB_DIR)
 
 # Object file paths

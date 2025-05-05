@@ -25,8 +25,10 @@ int fb_get_cursor_position()
 
 void fb_set_cursor(int position) 
 {
-	if (position < 0) position = 0;
-	if (position > ROWS * COLUMNS - 1) position = ROWS * COLUMNS - 1;
+	if (position < 0) 
+		position = 0;
+	if (position > ROWS * COLUMNS - 1) 
+		position = ROWS * COLUMNS - 1;
 	uint16_t pos = (uint16_t) position;
 	outb(COMMAND_PORT, HIGH_BYTE);
 	outb(DATA_PORT, (pos >> 8) & 0xFF);
@@ -34,7 +36,7 @@ void fb_set_cursor(int position)
 	outb(DATA_PORT, pos & 0xFF);
 }
 
-void fb_move_cursor(int n) 
+void fb_advance_cursor(int n) 
 {
 	int position = fb_get_cursor_position();
 	fb_set_cursor(position + n);
@@ -43,7 +45,8 @@ void fb_move_cursor(int n)
 void fb_write(char ch)
 {
 	int position = fb_get_cursor_position();
-	if (position == ROWS * COLUMNS - 1) return;
+	if (position == ROWS * COLUMNS - 1) 
+		return;
 
 	if (ch == '\n') 
 	{
@@ -60,12 +63,8 @@ void fb_write(char ch)
 		fb_set_cursor(--position);
 		framebuffer[position * 2] = ' ';
 		if (column == 0 && row != 0) 
-		{
 			while (framebuffer[(position - 1) * 2] == ' ' && position != 0) 
-			{
 				fb_set_cursor(--position);
-			}
-		}
 		return;
 	}
 
@@ -77,19 +76,16 @@ void fb_write_string(char* ch)
 {
 	int count = 0;
 	while (ch[count] != 0) 
-	{
 		fb_write(ch[count++]);
-	}
 }
 
 void fb_write_uint32(uint32_t value) {
-	char hex_chars[] = "0123456789ABCDEF";
+	static char hex_chars[] = "0123456789ABCDEF";
 	char buffer[11];
 	buffer[0] = '0';
 	buffer[1] = 'x';
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) 
 		buffer[2 + i] = hex_chars[(value >> ((7 - i) * 4)) & 0xF];
-	}
 	buffer[10] = '\0';
 	fb_write_string(buffer);
 }

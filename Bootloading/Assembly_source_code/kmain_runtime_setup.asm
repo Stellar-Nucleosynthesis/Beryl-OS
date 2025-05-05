@@ -1,4 +1,4 @@
-global higher_half_start
+global kmain_start
 extern kmain                                    ;Declaration of main kernel function function kmain
 
 KERNEL_STACK_SIZE equ 0x100000                  ;Stack size
@@ -11,7 +11,7 @@ kernel_stack:
 section .text
 align 0x4
 
-higher_half_start:
+kmain_start:
     mov esp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing stack pointer
     mov ebp, kernel_stack + KERNEL_STACK_SIZE   ;Initializing base pointer
     push eax                                    ;Multiboot magic number

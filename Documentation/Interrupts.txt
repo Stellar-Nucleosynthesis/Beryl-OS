@@ -1,0 +1,66 @@
+The Interrupts directory is responsible for system interrupts setup and management.
+
+
+---idt_setup.h---
+This file provides an interface for interrupt descriptor table setup.
+
+struct idt_descriptor;
+Architecture-required structure that contains the address of IDT and its size.
+
+void load_idt(uint32_t idt_descriptor_addr);
+Loads IDT.
+
+struct idt_entry;
+Represents an IDT entry.
+
+void fill_idt_entry(struct idt_entry* entry, uint16_t selector, uint32_t offset, uint8_t dpl, uint8_t present);
+Fills the IDT entry with the specified field values.
+
+struct cpu_state;
+Represents CPU state at the moment of interrupt. 
+
+struct stack_state;
+Represents stact state at the moment of interrupt. 
+
+void generic_interrupt_handler(struct cpu_state cpu_state, uint32_t int_num, struct stack_state stack_state);
+Generic interrupt handler. Executes an interrupt with the given interrupt number.
+
+bool ints_set();
+Returns true if interrups are enabled.
+
+void enable_ints();
+Enabled interrupts.
+
+void disable_ints();
+Disables interrupts.
+
+
+---interrupt_handlers.h---
+Declares callable interrupt handlers.
+
+void interrupt_handler_0x0();
+void interrupt_handler_0x1();
+...
+void interrupt_handler_0xFF();
+
+
+---pic_setup.h---
+This file provides an interface for programmable interrupt controller setup.
+
+void pic_remap(uint8_t offset1, uint8_t offset2);
+Remaps PIC interrupts.
+
+uint8_t pic1_get_mask();
+Returns current PIC1 mask.
+
+uint8_t pic2_get_mask();
+Returns current PIC2 mask.
+
+void pic1_set_mask(uint8_t mask);
+Sets PIC1 mask.
+
+void pic2_set_mask(uint8_t mask);
+Sets PIC2 mask.
+
+void pic_ack_interrupt(uint8_t int_num);
+Sends an interrupt acknowledgement to one of the PICs.

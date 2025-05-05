@@ -24,25 +24,18 @@
 #define BLINK         0x1
 #define NO_BLINK      0x0
 
-//Functions for getting the current cursor position 
 int fb_get_cursor_position();
 
-//Function for setting cursor position
 void fb_set_cursor(int position);
 
-//Function for moving cursor n times forwards (or backwards, if the value is negative)
-void fb_move_cursor(int n);
+void fb_advance_cursor(int n);
 
-//Function for writing a character and advancing the cursor one position forward
 void fb_write(char ch);
 
-//Function for writing a string and advancing the cursor forward
 void fb_write_string(char* ch);
 
-//Function for writing hexadecimal representation of a 32-bit number and advancing the cursor forward
 void fb_write_uint32(uint32_t value);
 
-//Function for setting background color
 void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink);
 
 #endif

@@ -1,14 +1,13 @@
 #include "stdint.h"
 
-#include "idt.h"
-#include "pic.h"
-#include "interrupt_operations.h"
+#include "idt_setup.h"
+#include "pic_setup.h"
 
 #include "port_io.h"
 #include "framebuffer_driver.h"
 #include "keyboard_driver.h"
 
-void fill_idt_entry(struct idt_entry* entry, uint16_t selector, uint32_t offset, uint8_t dpl, uint8_t present)
+void fill_idt_entry(idt_entry* entry, uint16_t selector, uint32_t offset, uint8_t dpl, uint8_t present)
 {
 	uint16_t offset_lo = offset & 0xFFFF;
 	uint16_t offset_hi = (offset >> 16) & 0xFFFF;
@@ -26,7 +25,7 @@ void keyboard_handler();
 
 void page_fault_handler(uint32_t cs, uint32_t eip);
 
-void generic_interrupt_handler(struct cpu_state cpu_state, uint32_t int_num, struct stack_state stack_state)
+void generic_interrupt_handler(cpu_state cpu_state, uint32_t int_num, stack_state stack_state)
 {
     switch (int_num) 
     {
@@ -69,13 +68,9 @@ void keyboard_handler()
         if (scancode_key_pressed(scancode))
         {
             if (caps_lock_active ^ shift_active) 
-            {
                 fb_write(scancode_to_ASCII_uppercase(scancode));
-            } 
             else
-            {
                 fb_write(scancode_to_ASCII(scancode));
-            }
         }
     }
 }

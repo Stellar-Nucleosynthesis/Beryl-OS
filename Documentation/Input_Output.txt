@@ -1,0 +1,59 @@
+The Input_Output directory is responsible for input-output operations.
+
+
+---port_io.h---
+This file provides a basic interface for port i/o.
+
+void outb(uint16_t port, uint8_t value);
+Writes a byte to the specified port.
+
+uint8_t inb(uint16_t port);
+Reads a byte from the specified port.
+
+void io_wait();
+A util function for waiting for a short period of time (1-4 microseconds).
+Note: issues an outb call to the port 0x80, which should be unused.
+
+
+---keyboard_driver.h---
+This file provides an interface for a basic keyboard driver.
+
+bool kbd_data_available();
+Returns true if data can be retrieved from the keyboard.
+
+uint8_t kbd_read_scancode();
+Returns current keyboard scancode.
+
+char scancode_to_ASCII(uint8_t scancode);
+Converts the specified scancode to lowercase ASCII.
+
+char scancode_to_ASCII_uppercase(uint8_t scancode);
+Converts the specified scancode to uppercase ASCII.
+
+bool scancode_key_pressed(uint8_t scancode);
+Returns true if the scancode indicates that the key was pressed.
+
+
+---framebuffer_driver.h---
+This file provides an interface for a basic framebuffer driver.
+
+int fb_get_cursor_position();
+Returns current cursor position.
+
+void fb_set_cursor(int position);
+Sets cursor position.
+
+void fb_advance_cursor(int n);
+Moves cursor n positions forward (or backward, if the value is negative).
+
+void fb_write(char ch);
+Writes the character and advances the cursor.
+
+void fb_write_string(char* ch);
+Writes the string and advances the cursor.
+
+void fb_write_uint32(uint32_t value);
+Writes the hexadecimal representation of the number and advances the cursor.
+
+void fb_set_color(uint8_t bg_color, uint8_t fg_color, uint8_t blink);
+Sets the background and foreground color at the cursor position.

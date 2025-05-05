@@ -1,0 +1,11 @@
+The Bootloading directory is responsible for the setup of the OS kernel.
+It consists of two main stages: virtual memory setup and kernel runtime setup.
+The files responsible for these tasks are virtual_memory_setup.asm and kmain_runtime_setup.asm respectively.
+
+
+---virtual_memory_setup.asm---
+The OS code execution starts here. The task of this file is to set up paging, map the kernel into the higher part of the virtual address space (Starting with the address 0xC0000000), and pass execution there.
+
+
+---kmain_runtime_setup.asm---
+This code sets up kernel stack, as it is needed for the execution of C programs. Is allocates some space in .bss, sets registers to the top of the buffer, and passed execution to the main kernel code. From now on, C programs start executing.

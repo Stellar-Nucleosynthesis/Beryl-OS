@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stdbool.h"
 #include "port_io.h"
 
 #define KBD_DATA_PORT    0x60
@@ -21,7 +22,7 @@ static const char scancode_to_ascii_uppercase[128] = {
     '*', 0, ' ', 0,
 };
 
-int kbd_data_available() 
+bool kbd_data_available() 
 {
 	uint8_t status_byte = inb(KBD_STATUS_PORT);
     return status_byte & 0x1;
@@ -34,23 +35,21 @@ uint8_t kbd_read_scancode()
 
 char scancode_to_ASCII(uint8_t scancode) 
 {
-    if (scancode < sizeof(scancode_to_ascii)) {
+    if (scancode < sizeof(scancode_to_ascii))
         return scancode_to_ascii[scancode & 0x7F];
-    }
 
     return 0;
 }
 
 char scancode_to_ASCII_uppercase(uint8_t scancode)
 {
-    if (scancode < sizeof(scancode_to_ascii_uppercase)) {
+    if (scancode < sizeof(scancode_to_ascii_uppercase))
         return scancode_to_ascii_uppercase[scancode & 0x7F];
-    }
 
     return 0;
 }
 
-int scancode_key_pressed(uint8_t scancode)
+bool scancode_key_pressed(uint8_t scancode)
 {
     return !(scancode & SCANCODE_RELEASE);
 }

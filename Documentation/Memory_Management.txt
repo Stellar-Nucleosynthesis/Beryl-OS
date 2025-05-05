@@ -1,0 +1,57 @@
+The Memory_Management directory is responsible for system memory management.
+
+
+---gdt_setup.h---
+This file provides an interface for global descriptor table setup.
+
+struct gdt_descriptor;
+Architecture-required structure that contains the address of GDT and its size.
+
+void load_gdt(uint32_t gdt_descriptor_addr);
+Loads GDT.
+
+struct gdt_entry;
+Represents a GDT entry.
+
+void fill_gdt_entry(gdt_entry* entry, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags);
+Constructs a GDT entry with given field values at the given address.
+
+void load_segment_selectors(uint16_t cs_selector, uint16_t ds_selector, uint16_t es_selector, uint16_t ss_selector);
+Loads segment selectors in segment registers.
+
+void enter_protected_mode();
+Enters 32-bit protected mode.
+
+
+---paging.h---
+This file provides an interface for paging setup and management.
+
+struct pde;
+Represents a 4-KB page directory entry.
+
+struct pde_large;
+Represents a 4-MB page directory entry.
+
+struct pte;
+Represents a page table entry.
+
+void load_pd(uint32_t pd_addr);
+Loads page directory.
+
+void enable_paging();
+Enables paging.
+
+void enable_large_pages();
+Enables large (4-MB) pages.
+
+void fill_pde(pde* pde_ptr, uint32_t pt_addr, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p);
+Fills the page directory entry with the specified field values.
+
+void fill_pde_large(pde_large* pde_ptr, uint32_t pf_addr, uint32_t pat, uint32_t g, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p);
+Fills the large page directory entry with the specified field values.
+
+void fill_pte(pte* pte_ptr, uint32_t pf_addr, uint32_t g, uint32_t pat, uint32_t pcd, uint32_t pwt, uint32_t u_s, uint32_t rw, uint32_t p);
+Fills the page table entry with the specified field values.
+
+uint32_t get_phys_addr(uint32_t addr);
+Returns physical mapping of a kernel virtual address.

@@ -2,14 +2,13 @@
 
 #include "framebuffer_driver.h"
 
-#include "gdt.h"
+#include "gdt_setup.h"
 #include "paging.h"
 #include "kernel_memory_allocator.h"
 
-#include "idt.h"
-#include "interrupt_operations.h"
+#include "idt_setup.h"
 #include "interrupt_handlers.h"
-#include "pic.h"
+#include "pic_setup.h"
 
 #include "multiboot.h"
 
@@ -17,11 +16,11 @@
 #define IDT_SIZE  0xFF  //IDT size in x86    
 #define PD_SIZE   0x400 //PD size in x86
 
-uint64_t GDT[GDT_SIZE];
-struct gdt_descriptor gdt_descr;
+gdt_entry GDT[GDT_SIZE];
+gdt_descriptor gdt_descr;
 
-struct idt_entry IDT[IDT_SIZE];
-struct idt_descriptor idt_descr;
+idt_entry IDT[IDT_SIZE];
+idt_descriptor idt_descr;
 
 uint32_t kernel_PD[PD_SIZE] __attribute__((aligned(4096)));
 
@@ -52,7 +51,8 @@ void setup_interrupt_table()
 void configure_pic()
 {
 	pic_remap(PIC1_INT_OFFSET, PIC2_INT_OFFSET);
-	pic_set_mask(0b11111101, 0b11111111);           //Only IRQs from the keyboard are enabled
+	pic1_set_mask(0b11111101);           //Only IRQs from the keyboard are enabled
+	pic2_set_mask(0b11111111);           //Only IRQs from the keyboard are enabled
 }
 
 void setup_new_pd()
@@ -61,7 +61,7 @@ void setup_new_pd()
 	{
 		kernel_PD[i] = 0x00000000;
 	}
-	fill_pde_large((struct pde_large*)(kernel_PD + 0x300), 0x00000000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1);
+	fill_pde_large((pde_large*)(kernel_PD + 0x300), 0x00000000, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x1);
 	load_pd(get_phys_addr((uint32_t)&kernel_PD));
 }
 
@@ -165,7 +165,7 @@ void kmain(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 	fb_write_uint32(heap_end_addr);
 	fb_write('\n');
 
-	int heap_init_res = init_kernel_memory_allocator(heap_start_addr, heap_end_addr, kernel_PD, 0x3FF);
+	/*int heap_init_res = init_kernel_memory_allocator(heap_start_addr, heap_end_addr, kernel_PD, 0x3FF);
 	fb_write_string("Kernel heap initialization result: ");
 	fb_write_uint32((uint32_t)heap_init_res);
 	fb_write('\n');
@@ -176,6 +176,6 @@ void kmain(uint32_t multiboot_info_addr, uint32_t multiboot_magic)
 	void* kmalloc2_res = kmalloc(40);
 	fb_write_string("kmalloc result (40 bytes): ");
 	fb_write_uint32((uint32_t)kmalloc2_res);
-	fb_write('\n');
+	fb_write('\n');*/
 	while (1);
 }
